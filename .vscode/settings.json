@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/opt/anaconda3/envs/dlgo/bin/python",
+    "python.condaPath": "/opt/anaconda3/bin/conda"
+}

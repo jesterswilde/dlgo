@@ -1,0 +1,44 @@
+from __future__ import print_function
+# tag::bot_vs_bot[]
+from dlgo import agent
+from dlgo.mcts import MCTSAgent, MCTSAgent_Other
+from dlgo import goboard
+from dlgo import gotypes
+from dlgo.scoring import compute_game_result
+from dlgo.utils import print_board, print_move
+import time
+
+
+def main():
+    board_size = 9
+    game = goboard.GameState.new_game(board_size)
+    black_rounds = 10000
+    white_rounds = 1000
+    black_temperature = 1.5
+    white_temperature = 1.5
+    bots = {
+        gotypes.Player.black: MCTSAgent(5000, 1.7),
+        gotypes.Player.white: MCTSAgent_Other(5000, 1.5),
+    }
+    while not game.is_over():
+        # time.sleep(0.3)  # <1>
+
+        print(chr(27) + "[2J")  # <2>
+        print_board(game.board)
+        bot_move = bots[game.next_player].select_move(game)
+        print_move(game.next_player, bot_move)
+        game = game.apply_move(bot_move)
+    print(compute_game_result(game))
+    print("Black Rounds: %s,  Black Temperature: %s" %
+          (black_rounds, black_temperature))
+    # print("White Rounds: %s,  White Temperature: %s" %
+    #   (white_rounds, white_temperature))
+    print("White: Random")
+
+
+if __name__ == '__main__':
+    main()
+
+# <1> We set a sleep timer to 0.3 seconds so that bot moves aren't printed too fast to observe
+# <2> Before each move we clear the screen. This way the board is always printed to the same position on the command line.
+# end::bot_vs_bot[]
