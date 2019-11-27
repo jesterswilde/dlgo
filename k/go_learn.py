@@ -1,40 +1,55 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, Flatten
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+
 
 # np.random.seed(123)
 input_data = np.load('./features-200.npy')
 output_data = np.load('./labels-200.npy')
 samples = input_data.shape[0]
-board_size = 9
-input_size = (samples, board_size, board_size, 1)
+size = 9
+input_shape = (size, size, 1)
 
+input_data = input_data.reshape(samples, size, size, 1)
 
-input_data = input_data.reshape(samples, board_size, board_size, 1)
+train_samples = int(0.9 * samples)
+input_train, input_test = input_data[:
+                                     train_samples], input_data[train_samples:]
+output_train, output_test = output_data[:
+                                        train_samples], output_data[train_samples:]
+# end::mcts_go_cnn_preprocessing[]
 
-print("Shapes")
-print(input_data.shape)
-print(output_data.shape)
+# tag::mcts_go_cnn_model[]
+model = Sequential()
+model.add(Conv2D(128, kernel_size=(3, 3),
+                 activation='relu',
+                 padding="same",
+                 input_shape=input_shape))
+model.add(Dropout(rate=0.3))
+model.add(Conv2D(64, (3, 3), activation='relu', padding="same"))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(rate=0.3))
+model.add(Flatten())
+model.add(Dense(1000, activation='relu'))
+model.add(Dropout(rate=0.3))
+model.add(Dense(500, activation='relu'))
+model.add(Dropout(rate=0.3))
+model.add(Dense(size * size, activation='softmax'))
+model.summary()
 
-train_num = int(0.9 * samples)
+model.compile(loss='categorical_crossentropy',
+              optimizer='sgd',
+              metrics=['accuracy'])
+# end::mcts_go_cnn_model[]
 
-# input_train, input_test = input_data[:train_num], input_data[train_num:]
-# output_train, output_test = output_data[:train_num], output_data[train_num:]
-
-# model = Sequential()
-# model.add(Dense(1000, activation="sigmoid", input_shape=(board_size,)))
-# model.add(Dense(500, activation="sigmoid"))
-# model.add(Dense(board_size, activation="sigmoid"))
-
-# model.compile(loss="mean_squared_error", optimizer="sgd", metrics=['accuracy'])
-# model.fit(
-#     x=input_train,
-#     y=output_train,
-#     batch_size=81,
-#     epochs=16,
-#     verbose=1,
-#     validation_data=(input_test, output_test))
-# model.summary()
-# score = model.evaluate(input_test, output_test, verbose=0)
-# print("Test Loss: ", score[0])
-# print("Test Accuracy: ", score[1])
+# tag::mcts_go_cnn_eval[]
+model.fit(input_train, output_train,
+          batch_size=64,
+          epochs=100,
+          verbose=1,
+          validation_data=(input_test, output_test))
+score = model.evaluate(input_test, output_test, verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
+# end::mcts_go_cnn_eval[]
