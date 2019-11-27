@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 *.tar
+*.h5
+*.npy
+*.tar.gz
